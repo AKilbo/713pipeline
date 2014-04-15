@@ -152,6 +152,8 @@ def findORFs(charSearchRange):
         with open(RPFShortcut + "-possibleORFPeaks.txt") as firstPassPeaks:
             #Go through each potential peak to look for the base at that site
 	    lineNumber = 0
+	    foundOrf = open(RPFShortcut + "-foundORFs.txt", "w")
+    	    errorFile = open(RPFShortcut + "-orfFindErrors.txt", "w")
             for line in firstPassPeaks:
 		lineNumber += 1
 		print lineNumber
@@ -172,7 +174,22 @@ def findORFs(charSearchRange):
                 #Create substring to search within
                 for nuc in xrange(startSearch,endSearch+1):
                     orfSearch += orgGenome[nuc]
-                searchForORFInRange(orfSearch, startIndex, charRange, findLoc)
+                orfInRange = orfSearch.find("ATG")
+                #Found an ATG in range!
+                if(orfInRange != -1):
+                    startSiteOffset = orfInRange - charRange
+                    orfPos = startIndex + startSiteOffset
+                    #Location is where in genome it is
+                    foundOrf.write("ATG" + "\t" + str(orfPos) +
+                                   "\t" + findLoc[2])
+                    foundOrf.write("\n")
+                else:
+                    #Create an error log
+                    for index in xrange(len(findLoc)):
+                        errorFile.write(findLoc[index] + "\t")
+                    errorFile.write("\n")
+	    foundOrf.close()
+	    errorFile.close()
 	    print "DONE FINDING ORFS"
             firstPassPeaks.close()
         theGenome.close()
