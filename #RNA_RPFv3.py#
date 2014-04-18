@@ -50,7 +50,7 @@ def run_tophat(data,name):
 
 def findRegions():
     regionFile = open(genomeShortcut + "-regionResults.txt", "w")
-    with open("accepted_hits.sam") as regionFileName:
+    with open(RPF) as regionFileName:
         for line in regionFileName:
             gatherLine = line.split()
             if(gatherLine[0] == '@SQ'):
@@ -106,22 +106,6 @@ def new_counts():
             "-g " + genomeShortcut +"-regionResults.txt > "+ RPFShortcut + "-readCounts.txt")
     print("Done!")
     # Now have readCounts.txt file in directory    
-
-def getOffsets(genome, regionFilePath):
-    regionDict = dict()
-    regionLists = open(regionFilePath)
-    for line in regionLists:
-        regionSplit = line.split()
-        regionName = regionSplit[0]
-        regionLoc = genome.find(regionName)
-        if(regionLoc != -1):
-            while(genome[regionLoc] != "]"):
-                regionLoc += 1
-            firstNonHeaderPos = regionLoc + 2
-            offset = countNonGenomeChars(genome,firstNonHeaderPos)
-        regionDict[regionName] = offset
-    regionLists.close()
-    return regionDict
     
 # Find peaks in reads given certain threshold
 # Written by Jacob
@@ -167,17 +151,17 @@ def findORFs(charSearchRange):
         genomeLength = len(orgGenome)
         with open(RPFShortcut + "-possibleORFPeaks.txt") as firstPassPeaks:
             #Go through each potential peak to look for the base at that site
-	    regionDict=getOffsets(orgGenome,genomeShortcut + "-regionResults.txt")
 	    lineNumber = 0
 	    foundOrf = open(RPFShortcut + "-foundORFs.txt", "w")
     	    errorFile = open(RPFShortcut + "-orfFindErrors.txt", "w")
             for line in firstPassPeaks:
 		lineNumber += 1
+		print lineNumber
                 findLoc = line.split()
                 #Range to look - in case peak not completely accurate
                 charRange = charSearchRange
                 #Corrects for non-genome chars (headers) in TopHat file
-                posCorrection = regionDict.get(findLoc[0])
+                posCorrection=countNonGenomeChars(orgGenome,int(findLoc[1]))
                 startIndex = int(findLoc[1]) + posCorrection
                 startSearch = startIndex - charRange
                 #In bounds
